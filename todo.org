@@ -1,0 +1,7 @@
+*** TODO Create a makefile rule that pulls and makes the Flumina base in a subdirectory
+*** TODO Find a way to remove the dialyzer warning for unknown Flumina functions.
+
+That could be solvable by installing Flumina as an Erlang application (e.g. mnesia, etc)
+
+
+*** TODO Clean up the experiment running scripts and remove everything that is not needed anymore
