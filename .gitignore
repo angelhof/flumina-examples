@@ -1,0 +1,23 @@
+## Emacs
+*~
+
+*.beam
+*.dump
+*.log
+*.pyc
+
+docker/read-only/*
+var/*
+archive/*
+*-archive
+
+.idea
+.venv
+
+target
+*.iml
+
+TAGS
+
+
+
