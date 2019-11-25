@@ -32,7 +32,7 @@ dialyzer: all
 
 all: $(BEAM_FILES)
 	@(cd examples && make EBIN_DIR=../$(EBIN_DIR) ERLC=$(ERLC) ERL_COMPILE_FLAGS="$(ERL_COMPILE_FLAGS)" \
-		I_DIR1="$(I_DIR1)" I_DIR2="$(I_DIR2)" $@)
+		I_DIR1="$(I_DIR1)"  $@)
 
 erlnode:
 	docker/build_erlnode.sh
