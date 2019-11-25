@@ -134,6 +134,10 @@ dependencies() ->
 init_state_pair() ->
     {'state0', init_state()}.
 
+-spec specification() -> specification().
+specification() ->
+    conf_gen:make_specification(state_types_map(), splits_merges(),
+                                dependencies(), init_state_pair()).
 
 %% Array API
 
@@ -530,7 +534,7 @@ update({connection, {Timestamp, Features, Label}}, State, SinkPid) ->
 
     case Timestamp rem (100 * 1000) == 0 of
         true ->
-            {Timestamp div 1000, "seconds"};
+            SinkPid ! {Timestamp div 1000, "seconds"};
         false ->
             ok
     end,
@@ -754,9 +758,7 @@ seq_conf(SinkPid) ->
 	conf_gen:make_topology(Rates, SinkPid),
 
     %% Computation
-    Specification =
-	conf_gen:make_specification(state_types_map(), splits_merges(),
-                                    dependencies(), init_state_pair()),
+    Specification = specification(),
 
     ConfTree = conf_gen:generate(Specification, Topology, [{optimizer,optimizer_sequential}]),
 
@@ -791,9 +793,7 @@ distr_conf(SinkPid) ->
 	conf_gen:make_topology(Rates, SinkPid),
 
     %% Computation
-    Specification =
-	conf_gen:make_specification(state_types_map(), splits_merges(),
-                                    dependencies(), init_state_pair()),
+    Specification = specification(),
 
     ConfTree = conf_gen:generate(Specification, Topology, [{optimizer,optimizer_greedy}]),
 
@@ -887,9 +887,7 @@ run_experiment(SinkPid, Optimizer, NodeNames, CheckOutliersPeriod,
         conf_gen:make_topology(Rates, SinkPid),
 
     %% Computation
-    Specification =
-	conf_gen:make_specification(state_types_map(), splits_merges(),
-                                    dependencies(), init_state_pair()),
+    Specification = specification(),
 
     %% Maybe setup logging
     LogOptions =
