@@ -1,6 +1,7 @@
 -module(outlier_detection).
 
--export([make_kddcup_generator/2,
+-export([specification/0,
+         make_kddcup_generator/2,
          check_outliers_input/5,
          seq/0,
          seq_conf/1,
@@ -757,10 +758,7 @@ seq_conf(SinkPid) ->
     Topology =
 	conf_gen:make_topology(Rates, SinkPid),
 
-    %% Computation
-    Specification = specification(),
-
-    ConfTree = conf_gen:generate(Specification, Topology, [{optimizer,optimizer_sequential}]),
+    ConfTree = conf_gen:generate_for_module(?MODULE, Topology, [{optimizer,optimizer_sequential}]),
 
     InputStream = make_connection_generator_init(node(), ?INPUT_FILE_10K, 1),
     CheckOutliersPeriodMs = 1000 * 1000,
@@ -792,10 +790,7 @@ distr_conf(SinkPid) ->
     Topology =
 	conf_gen:make_topology(Rates, SinkPid),
 
-    %% Computation
-    Specification = specification(),
-
-    ConfTree = conf_gen:generate(Specification, Topology, [{optimizer,optimizer_greedy}]),
+    ConfTree = conf_gen:generate_for_module(?MODULE, Topology, [{optimizer,optimizer_greedy}]),
 
     InputStream1 = make_connection_generator_init(node(), ?INPUT_FILE_5K0, 1),
     InputStream2 = make_connection_generator_init(node(), ?INPUT_FILE_5K1, 1),
@@ -886,9 +881,6 @@ run_experiment(SinkPid, Optimizer, NodeNames, CheckOutliersPeriod,
     Topology =
         conf_gen:make_topology(Rates, SinkPid),
 
-    %% Computation
-    Specification = specification(),
-
     %% Maybe setup logging
     LogOptions =
         case DoLog of
@@ -898,7 +890,7 @@ run_experiment(SinkPid, Optimizer, NodeNames, CheckOutliersPeriod,
             no_log ->
                 []
         end,
-    ConfTree = conf_gen:generate(Specification, Topology,
+    ConfTree = conf_gen:generate_for_module(?MODULE, Topology,
                                  LogOptions ++ [{optimizer, Optimizer}]),
 
     %% Prepare the producers input
