@@ -13,7 +13,7 @@
          run_experiment/7]).
 
 -include_lib("eunit/include/eunit.hrl").
--include("type_definitions.hrl").
+-include_lib("flumina/include/type_definitions.hrl").
 
 %% These values are copied from the initial paper.
 -define(PARAM_S, 10).

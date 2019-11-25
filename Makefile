@@ -4,13 +4,13 @@ ERL = $(OTP_DIR)/bin/erl
 
 FLUMINA_DIR = ${FLUMINA_TOP}
 FLUMINA_EBIN = $(FLUMINA_DIR)/ebin
-FLUMINA_INCLUDES = $(FLUMINA_DIR)/include
+FLUMINA_SRC = $(FLUMINA_DIR)/src
 
 # ERL_COMPILE_FLAGS = +native '+{hipe, [o3]}'
 ERL_COMPILE_FLAGS = +debug_info
 EBIN_DIR   = ebin
 EBIN_DIRS  = ebin $(FLUMINA_EBIN)
-I_DIR1 = $(FLUMINA_INCLUDES)
+I_DIR1 = include
 I_DIRS = -I $(I_DIR1)
 ERL_FILES  = $(wildcard *.erl)
 BEAM_FILES = $(subst .erl,.beam,$(ERL_FILES))
@@ -25,14 +25,15 @@ $(shell [ -d "$(EBIN_DIR)/" ] || mkdir $(EBIN_DIR)/)
 
 .PHONY: all clean
 
+## TODO: Find a better way of doing that rather than having Flumina source in the dialyzer
 dialyzer: all
 	@echo ""
 	@echo " --- --- --- --- DIALYZER --- --- --- --- "
-	dialyzer --src -r examples $(I_DIRS) -pa $(FLUMINA_EBIN)
+	dialyzer --src -r examples $(FLUMINA_SRC) $(I_DIRS) -pa $(FLUMINA_EBIN)
 
 all: $(BEAM_FILES)
 	@(cd examples && make EBIN_DIR=../$(EBIN_DIR) ERLC=$(ERLC) ERL_COMPILE_FLAGS="$(ERL_COMPILE_FLAGS)" \
-		I_DIR1="$(I_DIR1)"  $@)
+		I_DIR1="$(I_DIR1)" LIBRARIES="$(FLUMINA_EBIN)" $@)
 
 erlnode:
 	docker/build_erlnode.sh

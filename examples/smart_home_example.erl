@@ -13,7 +13,7 @@
 	]).
 
 -include_lib("eunit/include/eunit.hrl").
--include("type_definitions.hrl").
+-include_lib("flumina/include/type_definitions.hrl").
 
 main() ->
     sequential().
