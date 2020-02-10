@@ -1,6 +1,6 @@
 ## Flumina Examples
 
-This repository contains example applications for Flumina.
+This repository contains example applications for [Flumina](https://github.com/angelhof/flumina).
 
 ### Usage instructions
 
