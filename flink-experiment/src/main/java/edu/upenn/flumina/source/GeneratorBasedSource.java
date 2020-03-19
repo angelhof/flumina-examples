@@ -9,6 +9,13 @@ import org.apache.logging.log4j.Logger;
 import java.io.Serializable;
 import java.util.Iterator;
 
+/**
+ * WARNING: This source is based on a timestamp that it takes when it
+ * is initialized (`startTime`). If different sources don't start at
+ * the same time, there will be constant skew between them. To avoid
+ * this, we need to make sure that all sources are spawned and start
+ * executing at the same exact time.
+ */
 public class GeneratorBasedSource<T extends Timestamped> extends RichParallelSourceFunction<T> implements Serializable {
 
     private static final long serialVersionUID = -6875008481095724331L;
