@@ -1,5 +1,6 @@
-# The context for this container should be the root of the Flumina prototype.
-# That is, to build the container from the current directory, run the following.
+# The context for this container should be the root of the Flumina examples
+# directory. That is, to build the container from the current directory,
+# run the following.
 #
 #   docker build -t erlnode -f Dockerfile ../..
 #
@@ -7,11 +8,9 @@
 #
 #   docker build -t erlnode -f docker/erlnode/Dockerfile .
 
-# Stage 1: build the prototype
+# Stage 1: build Flumina and the examples
 
-from erlang:21.0 as builder
-
-ENV ERL_TOP /usr/local
+from flumina as builder
 
 COPY . /proto
 WORKDIR /proto
@@ -23,6 +22,7 @@ from erlang:21.0-alpine
 
 RUN mkdir /proto
 COPY --from=builder /proto/ebin /proto/ebin
+COPY --from=builder /flumina/ebin /proto/ebin
 COPY docker/erlnode/wrapper.sh /proto/wrapper.sh
 RUN chmod +x /proto/wrapper.sh
 WORKDIR /proto
