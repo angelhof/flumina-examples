@@ -24,6 +24,11 @@ suites = {
         [ValueBarrierExperiment(18, 1_000_000, rate, 1_000, 10, ns3_conf=NS3Conf())
          for rate in range(10, 35, 2)]
     ),
+    'exp1-with-5-nodes': ExperimentSuite(
+        'exp1-with-5-nodes',
+        [ValueBarrierExperiment(5, 1_000_000, rate, 1_000, 10, ns3_conf=NS3Conf())
+         for rate in range(20, 51, 2)]
+    ),
     'exp1-10Gbps': ExperimentSuite(
         'exp1-10Gbps',
         [ValueBarrierExperiment(18, 1_000_000, rate, 1_000, 10, ns3_conf=NS3Conf(data_rate='10Gbps'))
