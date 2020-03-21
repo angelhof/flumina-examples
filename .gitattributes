@@ -1,5 +1,6 @@
 archive/* linguist-generated
 data/* linguist-generated
+examples/* linguist-detectable
 logs/* linguist-generated
 ns3/* linguist-generated
 output/* linguist-generated
