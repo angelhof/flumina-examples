@@ -467,7 +467,7 @@ distributed_experiment_conf(SinkPid, NodeNames, RateMultiplier, RatioAB, Heartbe
 	fun() ->
 	        log_mod:initialize_message_logger_state("producer", sets:from_list([b]))
 	end,
-    producer:make_producers(InputStreams, ConfTree, Topology, steady_timestamp, LoggerInitFun),
+    producer:make_producers(InputStreams, ConfTree, Topology, steady_retimestamp, LoggerInitFun),
 
     SinkPid ! finished,
     ok.
