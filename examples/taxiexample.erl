@@ -614,7 +614,7 @@ distributed_2_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, distributed_conf_2}, output_2()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, distributed_conf_2}, output_2()))
       end} || _ <- Rounds].
 
 sequential_2_test_() ->
@@ -623,7 +623,7 @@ sequential_2_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, sequential_conf_2}, output_2()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, sequential_conf_2}, output_2()))
       end} || _ <- Rounds].
 
 output_1() ->
@@ -664,7 +664,7 @@ distributed_1_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, distributed_conf_1}, output_1()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, distributed_conf_1}, output_1()))
       end} || _ <- Rounds].
 
 sequential_1_test_() ->
@@ -673,7 +673,7 @@ sequential_1_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, sequential_conf_1}, output_1()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, sequential_conf_1}, output_1()))
       end} || _ <- Rounds].
 
 
@@ -697,7 +697,7 @@ distributed_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, distributed_conf}, output()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, distributed_conf}, output()))
       end} || _ <- Rounds].
 
 sequential_test_() ->
@@ -706,5 +706,5 @@ sequential_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, sequential_conf}, output()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, sequential_conf}, output()))
       end} || _ <- Rounds].

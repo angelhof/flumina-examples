@@ -354,7 +354,7 @@ distributed_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, distributed_conf}, output()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, distributed_conf}, output()))
       end} || _ <- Rounds].
 
 sequential_test_() ->
@@ -363,5 +363,5 @@ sequential_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, sequential_conf}, output()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, sequential_conf}, output()))
       end} || _ <- Rounds].
