@@ -13,7 +13,8 @@
 	 distr_big/0,
 	 distr_big_conf/1,
 	 greedy_big/0,
-	 greedy_big_conf/1,
+	 greedy_big_conf/2,
+	 greedy_big_conf_test/2,
 	 greedy_complex/0,
 	 greedy_complex_conf/1,
 	 greedy_local/0,
@@ -104,14 +105,14 @@ distr_big_conf(SinkPid) ->
 greedy_big() ->
     true = register('sink', self()),
     SinkName = {sink, node()},
-    _ExecPid = spawn_link(?MODULE, greedy_big_conf, [SinkName]),
+    _ExecPid = spawn_link(?MODULE, greedy_big_conf_test, [SinkName, steady_sync_timestamp]),
     LoggerInitFun =
 	fun() ->
 	        log_mod:initialize_message_logger_state("sink", sets:from_list([sum]))
 	end,
     util:sink(LoggerInitFun).
 
-greedy_big_conf(SinkPid) ->
+greedy_big_conf(SinkPid, ProducerType) ->
     %% Architecture
     Rates = [{node(), b, 10},
 	     {node(), {a,1}, 1000},
@@ -147,9 +148,43 @@ greedy_big_conf(SinkPid) ->
 	fun() ->
 	        log_mod:initialize_message_logger_state("producer", sets:from_list([b]))
 	end,
-    producer:make_producers(InputStreams, ConfTree, Topology, steady_sync_timestamp, LoggerInitFun),
+    producer:make_producers(InputStreams, ConfTree, Topology, ProducerType, LoggerInitFun),
 
     SinkPid ! finished.
+
+greedy_big_conf_test(SinkPid, ProducerType) ->
+    %% Architecture
+    Rates = [{node(), b, 10},
+	     {node(), {a,1}, 1000},
+	     {node(), {a,2}, 1000}],
+    Topology =
+	conf_gen:make_topology(Rates, SinkPid),
+
+    %% Computation
+    Tags = [b, {a,1}, {a,2}],
+    StateTypesMap =
+	#{'state0' => {sets:from_list(Tags), fun update/3},
+	  'state_a' => {sets:from_list([{a,1}, {a,2}]), fun update/3}},
+    SplitsMerges = [{{'state0', 'state_a', 'state_a'}, {fun split/2, fun merge/2}}],
+    Dependencies = dependencies(),
+    InitState = {'state0', 0},
+    Specification =
+	conf_gen:make_specification(StateTypesMap, SplitsMerges, Dependencies, InitState),
+
+    ConfTree = conf_gen:generate(Specification, Topology,
+				 [{optimizer,optimizer_greedy}]),
+
+    %% Set up where will the input arrive
+    {A1, A2, Bs} = big_input_distr_example(node(), node(), node()),
+    %% InputStreams = [{A1, {a,1}, 50}, {A2, {a,2}, 50}, {Bs, b, 500}],
+    InputStreams = [{A1, {{a,1}, node()}, 100},
+		    {A2, {{a,2}, node()}, 100},
+		    {Bs, {b, node()}, 100}],
+
+    %% Setup logging
+    producer:make_producers(InputStreams, ConfTree, Topology, ProducerType),
+    SinkPid ! finished.
+
 
 greedy_complex() ->
     true = register('sink', self()),
@@ -684,7 +719,7 @@ input_example_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, distributed_conf_1}, input_example_output()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, distributed_conf_1}, input_example_output()))
       end} || _ <- Rounds]}.
 
 input_example2_output() ->
@@ -700,5 +735,22 @@ input_example2_test_() ->
       fun util:nothing/0,
       fun(ok) -> testing:unregister_names() end,
       fun(ok) ->
-	      ?_assertEqual(ok, testing:test_mfa({?MODULE, distributed_conf}, input_example2_output()))
+	      ?_assertEqual(ok, testing:test_mf({?MODULE, distributed_conf}, input_example2_output()))
       end} || _ <- Rounds]}.
+
+input_greedy_big_output() ->
+    [{sum, {{b, B}, B * B div 2}} || B <- lists:seq(1000,1000000,1000)].
+
+input_greedy_big_test_() ->
+    ProducerTypes = [timestamp_based,
+                     steady_timestamp,
+                     steady_sync_timestamp
+                    ],
+    {"Input greedy big test",
+     [{setup,
+      fun util:nothing/0,
+      fun(ok) -> testing:unregister_names() end,
+      fun(ok) -> {timeout, 120,
+	      ?_assertEqual(ok, testing:test_mfa({?MODULE, greedy_big_conf_test}, [ProducerType],
+                                                 input_greedy_big_output())) }
+      end} || ProducerType <- ProducerTypes]}.
