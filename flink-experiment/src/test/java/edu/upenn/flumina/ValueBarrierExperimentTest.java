@@ -68,7 +68,7 @@ public class ValueBarrierExperimentTest {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.setParallelism(4);
-        env.addSource(new ValueSource(10_000, 10.0))
+        env.addSource(new ValueSource(10_000, 10.0, System.nanoTime()))
                 .assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks<ValueOrHeartbeat>() {
                     @Nullable
                     @Override
@@ -126,10 +126,11 @@ public class ValueBarrierExperimentTest {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.setParallelism(valueNodes + 1);
 
+        long startTime = System.nanoTime() + 10_000_000;
         DataStream<ValueOrHeartbeat> valueStream =
-                env.addSource(new ValueSource(totalValues, valueRate)).setParallelism(valueNodes);
+                env.addSource(new ValueSource(totalValues, valueRate, startTime)).setParallelism(valueNodes);
         DataStream<BarrierOrHeartbeat> barrierStream =
-                env.addSource(new BarrierSource(totalValues, valueRate, vbRatio, hbRatio)).setParallelism(1);
+                env.addSource(new BarrierSource(totalValues, valueRate, vbRatio, hbRatio, startTime)).setParallelism(1);
 
         final MapStateDescriptor<Void, Void> stateDescriptor =
                 new MapStateDescriptor("BroadcastState", Void.class, Void.class);
