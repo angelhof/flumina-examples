@@ -44,12 +44,17 @@ public class ValueBarrierExperiment {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // Prepare the input streams
-        ValueSource valueSource = new ValueSource(conf.getTotalValues(), conf.getValueRate());
+
+        // We sync all the input sources with the same start time, which is current time plus 1 s
+        long startTime = System.nanoTime() + 1_000_000_000;
+
+        ValueSource valueSource = new ValueSource(conf.getTotalValues(), conf.getValueRate(), startTime);
         DataStream<ValueOrHeartbeat> valueStream = env.addSource(valueSource)
                 .setParallelism(conf.getValueNodes())
                 .slotSharingGroup("values");
         BarrierSource barrierSource = new BarrierSource(
-                conf.getTotalValues(), conf.getValueRate(), conf.getValueBarrierRatio(), conf.getHeartbeatRatio());
+                conf.getTotalValues(), conf.getValueRate(), conf.getValueBarrierRatio(),
+                conf.getHeartbeatRatio(), startTime);
         DataStream<BarrierOrHeartbeat> barrierStream = env.addSource(barrierSource)
                 .setParallelism(1)
                 .slotSharingGroup("barriers");

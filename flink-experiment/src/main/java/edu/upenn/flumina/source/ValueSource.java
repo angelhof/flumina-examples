@@ -7,7 +7,7 @@ public class ValueSource extends GeneratorBasedSource<ValueOrHeartbeat> {
 
     private static final long serialVersionUID = 6265081300394978260L;
 
-    public ValueSource(int totalValues, double rate) {
-        super(new ValueGenerator(totalValues, rate));
+    public ValueSource(int totalValues, double rate, long startTime) {
+        super(new ValueGenerator(totalValues, rate), startTime);
     }
 }

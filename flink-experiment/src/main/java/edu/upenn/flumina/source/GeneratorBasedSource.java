@@ -8,14 +8,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
-/**
- * WARNING: This source is based on a timestamp that it takes when it
- * is initialized (`startTime`). If different sources don't start at
- * the same time, there will be constant skew between them. To avoid
- * this, we need to make sure that all sources are spawned and start
- * executing at the same exact time.
- */
 public class GeneratorBasedSource<T extends Timestamped> extends RichParallelSourceFunction<T> implements Serializable {
 
     private static final long serialVersionUID = -6875008481095724331L;
@@ -28,14 +22,23 @@ public class GeneratorBasedSource<T extends Timestamped> extends RichParallelSou
 
     private final Generator<? extends T> generator;
 
+    private final long startTime;
+
     /**
      * A parallel source that produces objects of type {@link T}. The objects are produced by {@code generator}
      * at a rate of {@code generator.getRate()} values per millisecond.
      *
+     * The source is initialized with {@code startTime}, a timestamp equivalent to the one that would be obtained
+     * by running {@code System.nanoTime()}. This timestamp is used to synchronize multiple parallel instances
+     * with the same starting time.
+     *
      * @param generator The generator used by the source
+     * @param startTime A timestamp equivalent to the one that would be obtained by running
+     *                  {@code System.nanoTime()}
      */
-    public GeneratorBasedSource(Generator<? extends T> generator) {
+    public GeneratorBasedSource(Generator<? extends T> generator, long startTime) {
         this.generator = generator;
+        this.startTime = startTime;
     }
 
     @Override
@@ -45,7 +48,12 @@ public class GeneratorBasedSource<T extends Timestamped> extends RichParallelSou
         T obj = iterator.next();
 
         // Future time is relative to startTime.
-        final long startTime = System.nanoTime();
+        if (LOG.isDebugEnabled()){
+            final long systemNanoTime = System.nanoTime();
+            LOG.debug("[{}] startTime = {} System.nanoTime() = {} diff = {} ms",
+                    getRuntimeContext().getIndexOfThisSubtask(), startTime, systemNanoTime,
+                    TimeUnit.NANOSECONDS.toMillis(systemNanoTime - startTime));
+        }
         do {
             final double iterationStartTime = (System.nanoTime() - startTime) / 1_000_000.0;
             final long iterationStartTimeNormalized = (long) (iterationStartTime * rate);
