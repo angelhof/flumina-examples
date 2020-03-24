@@ -105,7 +105,7 @@ distr_big_conf(SinkPid) ->
 greedy_big() ->
     true = register('sink', self()),
     SinkName = {sink, node()},
-    _ExecPid = spawn_link(?MODULE, greedy_big_conf_test, [SinkName, steady_sync_timestamp]),
+    _ExecPid = spawn_link(?MODULE, greedy_big_conf, [SinkName, steady_sync_timestamp]),
     LoggerInitFun =
 	fun() ->
 	        log_mod:initialize_message_logger_state("sink", sets:from_list([sum]))
@@ -141,6 +141,8 @@ greedy_big_conf(SinkPid, ProducerType) ->
     InputStreams = [{A1, {{a,1}, node()}, 100},
 		    {A2, {{a,2}, node()}, 100},
 		    {Bs, {b, node()}, 100}],
+
+    log_stats_time_and_number_of_messages(1001000),
 
     %% Setup logging
     _ThroughputLoggerPid = spawn_link(log_mod, num_logger_process, ["throughput", ConfTree]),
@@ -285,7 +287,8 @@ greedy_local_conf(SinkPid) ->
     %% Set up where will the input arrive
 
     %% Input Streams
-    {As, Bs} = parametrized_input_distr_example(NumberAs, NodeNames, RatioAB, HeartbeatBRatio),
+    {As, Bs, _NumberOfMessages} =
+        parametrized_input_distr_example(NumberAs, NodeNames, RatioAB, HeartbeatBRatio),
     %% InputStreams = [{A1input, {a,1}, 30}, {A2input, {a,2}, 30}, {BsInput, b, 30}],
     AInputStreams = [{AIn, {ATag, ANode}, RateMultiplier}
 		     || {AIn, ATag, ANode} <- lists:zip3(As, ATags, ANodeNames)],
@@ -490,11 +493,15 @@ distributed_experiment_conf(SinkPid, NodeNames, RateMultiplier, RatioAB, Heartbe
     %% Set up where will the input arrive
 
     %% Input Streams
-    {As, BsMsgInit} = parametrized_input_distr_example(NumberAs, NodeNames, RatioAB, HeartbeatBRatio),
+    {As, BsMsgInit, NumberOfMessages} =
+        parametrized_input_distr_example(NumberAs, NodeNames, RatioAB, HeartbeatBRatio),
     AInputStreams = [{AIn, {ATag, ANode}, RateMultiplier}
 		     || {AIn, ATag, ANode} <- lists:zip3(As, ATags, ANodeNames)],
     BInputStream = {BsMsgInit, {b, BNodeName}, RateMultiplier},
     InputStreams = [BInputStream|AInputStreams],
+
+    %% Log the current time and total number of events
+    log_stats_time_and_number_of_messages(NumberOfMessages),
 
     %% Log the input times of b messages
     _ThroughputLoggerPid = spawn_link(log_mod, num_logger_process, ["throughput", ConfTree]),
@@ -506,6 +513,17 @@ distributed_experiment_conf(SinkPid, NodeNames, RateMultiplier, RatioAB, Heartbe
 
     SinkPid ! finished,
     ok.
+
+log_stats_time_and_number_of_messages(NumberOfMessages) ->
+    %% Setup the statistics filename
+    StatsFilename = "logs/experiment_stats.log",
+    %% Log the time before the producers have been spawned and the
+    %% number of events that will be sent in total.
+    BeforeProducersTimestamp = erlang:monotonic_time(),
+    StatsData = io_lib:format("ab-experiment -- Time before spawning producers: ~p, Number of messages: ~p~n",
+                             [BeforeProducersTimestamp, NumberOfMessages]),
+    ok = file:write_file(StatsFilename, StatsData).
+
 
 %% The specification of the computation
 update({{a,_}, Value}, Sum, SendTo) ->
@@ -604,7 +622,7 @@ make_bs_heartbeats(BNodeName, LengthAStream, RatioAB, HeartbeatBRatio) ->
 
 %% WARNING: The hearbeat ratio needs to be a divisor of RatioAB (Maybe not necessarily)
 -spec parametrized_input_distr_example(integer(), [node()], integer(), integer())
-				      -> {[msg_generator_init()], msg_generator_init()}.
+				      -> {[msg_generator_init()], msg_generator_init(), integer()}.
 parametrized_input_distr_example(NumberAs, [BNodeName|ANodeNames], RatioAB, HeartbeatBRatio) ->
     LengthAStream = 1000000,
     %% Return a triple that makes the results
@@ -613,7 +631,8 @@ parametrized_input_distr_example(NumberAs, [BNodeName|ANodeNames], RatioAB, Hear
 
     Bs = {fun abexample:make_bs_heartbeats/4, [BNodeName, LengthAStream, RatioAB, HeartbeatBRatio]},
 
-    {As, Bs}.
+    %% Return the streams and the total number of messages
+    {As, Bs, (LengthAStream * NumberAs) + (LengthAStream div RatioAB)}.
 
 
 

@@ -136,12 +136,35 @@ def read_preprocess_throughput_data(log_dir_name):
 
     return ts, ths
 
+def get_flumina_net_runtime(log_dir):
+    producer_filename = path.join(log_dir, 'producers_time.log')
+    with open(producer_filename) as file:
+        lines = file.readlines()
+        start_time_ns = int(lines[0].split(':')[-1])
 
-def get_erlang_throughput(result_path):
-    # TODO: There has to be a better way. Mean throughput is total events / total time.
-    ts, ths = read_preprocess_throughput_data(result_path)
-    return np.mean(ths)
+    sink_filename = path.join(log_dir, 'sink_stats.log')
+    with open(sink_filename) as file:
+        lines = file.readlines()
+        end_time_ns = int(lines[1].split(':')[-1])
 
+    net_runtime_ms = (end_time_ns - start_time_ns) / 1000000
+    return net_runtime_ms
+
+def get_events_processed(log_dir):
+    filename = path.join(log_dir, 'experiment_stats.log')
+    with open(filename) as file:
+        lines = file.readlines()
+        number_events = int(lines[0].split(':')[-1])
+        return number_events
+
+def get_erlang_throughput(log_dir):
+    # ts, ths = read_preprocess_throughput_data(log_dir)
+    # print("Old:", np.mean(ths))
+    runtime = get_flumina_net_runtime(log_dir)
+    events = get_events_processed(log_dir)
+    new_throughput = events / runtime
+    # print("New:", new_throughput)
+    return new_throughput
 
 # NS3 log parsing
 
