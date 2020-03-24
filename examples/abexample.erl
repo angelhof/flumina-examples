@@ -484,11 +484,12 @@ distributed_experiment_conf(SinkPid, NodeNames, RateMultiplier, RatioAB, Heartbe
     Specification =
 	conf_gen:make_specification(StateTypesMap, SplitsMerges, Dependencies, InitState),
 
-    LogTriple = log_mod:make_num_log_triple(),
+    %% LogTriple = log_mod:make_num_log_triple(),
     ConfTree = conf_gen:generate(Specification, Topology,
-				 [{optimizer,Optimizer},
+				 [{optimizer,Optimizer}
 				  %% {checkpoint, fun conf_gen:always_checkpoint/2},
-				  {log_triple, LogTriple}]),
+				  %% {log_triple, LogTriple}
+                                 ]),
 
     %% Set up where will the input arrive
 
@@ -504,7 +505,7 @@ distributed_experiment_conf(SinkPid, NodeNames, RateMultiplier, RatioAB, Heartbe
     log_stats_time_and_number_of_messages(NumberOfMessages),
 
     %% Log the input times of b messages
-    _ThroughputLoggerPid = spawn_link(log_mod, num_logger_process, ["throughput", ConfTree]),
+    %% _ThroughputLoggerPid = spawn_link(log_mod, num_logger_process, ["throughput", ConfTree]),
     LoggerInitFun =
 	fun() ->
 	        log_mod:initialize_message_logger_state("producer", sets:from_list([b]))
