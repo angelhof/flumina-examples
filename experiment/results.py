@@ -47,10 +47,10 @@ def read_preprocess_latency_data(log_dir_name):
     log_file_names = os.listdir(log_dir_name)
     producer_file_names = [path.join(log_dir_name, filename)
                            for filename in log_file_names
-                           if filename.startswith('producer')]
+                           if filename.startswith('producer_<')]
     sink_file_names = [path.join(log_dir_name, filename)
                        for filename in log_file_names
-                       if filename.startswith('sink')]
+                       if filename.startswith('sink_<')]
 
     producer_dic = {}
     for producer_file_name in producer_file_names:
@@ -84,57 +84,7 @@ def get_erlang_latencies(result_path):
     return p10, p50, p90
 
 
-# Old code for processing Erlang throughputs from lib.py
-# TODO: Make it cleaner
-
-def parse_throughput_line(line):
-    timestamp_messages = line.split("}")[-2]
-    timestamp, message = timestamp_messages.split(",")[-2:]
-    return int(timestamp), int(message)
-
-
-def read_preprocess_throughput_data(log_dir_name):
-    log_file_names = os.listdir(log_dir_name)
-    throughput_file_names = [path.join(log_dir_name, filename)
-                             for filename in log_file_names
-                             if filename.startswith('throughput')]
-    # There should only be one
-    filename = throughput_file_names[0]
-
-    timestamp_message_dict = {}
-    with open(filename) as file:
-        timestamp_message_pairs = [parse_throughput_line(line) for line in file.readlines()]
-        for timestamp, n in timestamp_message_pairs:
-            if timestamp in timestamp_message_dict:
-                timestamp_message_dict[timestamp] += n
-            else:
-                timestamp_message_dict[timestamp] = n
-    final_timestamp_message_pairs = sorted(timestamp_message_dict.items(), key=itemgetter(0))
-
-    # Remove trailing zeros
-    while final_timestamp_message_pairs and final_timestamp_message_pairs[-1][1] == 0:
-        final_timestamp_message_pairs.pop()
-
-    # Remove leading zeros
-    while final_timestamp_message_pairs and final_timestamp_message_pairs[0][1] == 0:
-        final_timestamp_message_pairs.pop(0)
-
-    timestamps = [ts for ts, n in final_timestamp_message_pairs]
-    first_ts = timestamps[0]
-    # Those are shifted to 0 and are in seconds
-    shifted_timestamps = [(ts - first_ts) / 1_000_000.0 for ts in timestamps]
-
-    ts_diffs = [ts1 - ts0 for ts1, ts0 in zip(shifted_timestamps[1:], shifted_timestamps[:-1])]
-    ns = [n for ts, n in final_timestamp_message_pairs]
-    # This is messages per 1 millisecond
-    throughput = [n / ts_diff for n, ts_diff in zip(ns[1:], ts_diffs)]
-
-    yp = None
-    ## Interpolate to get the the steady throughput
-    ts = np.linspace(shifted_timestamps[0], shifted_timestamps[-1], 3 * len(timestamps))
-    ths = np.interp(ts, shifted_timestamps[1:], throughput, yp)
-
-    return ts, ths
+# Processing Erlang throughputs
 
 def get_flumina_net_runtime(log_dir):
     producer_filename = path.join(log_dir, 'producers_time.log')
@@ -158,8 +108,6 @@ def get_events_processed(log_dir):
         return number_events
 
 def get_erlang_throughput(log_dir):
-    # ts, ths = read_preprocess_throughput_data(log_dir)
-    # print("Old:", np.mean(ths))
     runtime = get_flumina_net_runtime(log_dir)
     events = get_events_processed(log_dir)
     new_throughput = events / runtime
