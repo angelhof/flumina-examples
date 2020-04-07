@@ -18,7 +18,7 @@ RUN make clean && make all
 
 # Stage 2: copy the binaries to the alpine version
 
-from erlang:21.0-alpine
+from erlang:22-alpine
 
 # Prerequisites:
 #   - sudo -- needed for editing /etc/hosts
