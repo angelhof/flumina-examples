@@ -6,12 +6,16 @@ NODE=$(cat /conf/node)
 ARGS=$(cat /conf/args)
 NS3=$(cat /conf/ns3)
 
-LOG=/proto/logs/wrapper-${NODE}.log
+LOG=/flumina/logs/wrapper-${NODE}.log
+PIPE=/conf/notify
 
 if [ "${NS3}" -eq "1" ]
 then
-  cat /conf/hosts >> /etc/hosts
-  
+  sudo /bin/sh -c "cat /conf/hosts >> /etc/hosts"
+
+  echo "The contents of /etc/hosts:" >> ${LOG}
+  cat /etc/hosts >> ${LOG}
+
   # Wait until the eth0 interface is up. We use this as a synchronization barrier;
   # make sure to configure the network for the node before enabling the
   # interface.
@@ -34,5 +38,9 @@ echo -e "Starting the node\n\tNODE=${NODE}\n\tARGS=${ARGS}" >> ${LOG}
   -pa ebin \
   ${ARGS} >> ${LOG} 2>&1
 
-echo "Exiting the wrapper" >> ${LOG}
+if [ -p "${PIPE}" ]
+then
+  echo "${NODE}" > ${PIPE}
+fi
 
+echo "Exiting the wrapper" >> ${LOG}

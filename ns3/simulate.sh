@@ -65,7 +65,7 @@ do
   ## log and conf directory
   rm -rf ${workdir}/var/log/${node}
   rm -rf ${workdir}/var/conf/${node}
-  
+
   mkdir -p ${workdir}/var/log/${node}
   mkdir -p ${workdir}/var/conf/${node}
 
@@ -80,7 +80,11 @@ do
   fi
 done
 
-# Run the docker containers. Assumes existence of an image called erlnode, or earlnode-ns3 for the ns3 simulation.
+# Create the notification pipe for the main node
+
+mkfifo ${workdir}/var/conf/${main}/notify
+
+# Run the docker containers. Assumes existence of an image called erlnode.
 
 log "Starting the docker containers..."
 
@@ -110,8 +114,8 @@ do
       --name "${node}.local" \
       --hostname "${node}.local" \
       -v "${workdir}/var/conf/${node}":/conf \
-      -v "${workdir}/var/log/${node}":/proto/logs \
-      -v "${workdir}/data":/proto/data \
+      -v "${workdir}/var/log/${node}":/flumina/logs \
+      -v "${workdir}/data":/flumina/data \
       erlnode
 
     docker inspect --format '{{ .State.Pid }}' "${node}.local" > ${workdir}/var/run/${node}.pid
@@ -129,8 +133,8 @@ docker run \
   --name "${main}.local" \
   --hostname "${main}.local" \
   -v "${workdir}/var/conf/${main}":/conf \
-  -v "${workdir}/var/log/${main}":/proto/logs \
-  -v "${workdir}/data":/proto/data \
+  -v "${workdir}/var/log/${main}":/flumina/logs \
+  -v "${workdir}/data":/flumina/data \
   erlnode
 
 docker inspect --format '{{ .State.Pid }}' "${main}.local" > ${workdir}/var/run/${main}.pid
@@ -167,10 +171,23 @@ then
   sleep 1
   ./docker/container.sh ${main} 0
 
-  # Wait for Waf to finish
+  # Wait for the simulation to finish. First we wait for the
+  # signal from the main node that it has finished...
 
-  log "Waiting for the ns3 process to finish..."
+  log "Waiting for the simulation to finish..."
 
+  notification=""
+  while [ "${notification}" != "${main}" ]; do
+    notification=$(cat ${workdir}/var/conf/${main}/notify)
+    log "Received notification: ${notification}"
+  done
+
+  # Signal the tap-vm process to end the NS3 simulation, then
+  # wait for WAF to finish
+
+  tapvm=$(pidof -s tap-vm)
+  log "Signaling tap-vm (PID ${tapvm}) to stop the NS3 simulation"
+  kill -SIGINT ${tapvm}
   wait ${wafPid}
   rm ${workdir}/var/run/ns3.pid
 else
@@ -208,4 +225,3 @@ then
 fi
 
 log "DONE"
-

@@ -41,7 +41,7 @@ from plot_scaling_latency_throughput import plot_scaleup_rate, plot_scaleup_node
 ## 1 corresponds to 1 message per millisecond.
 
 class NS3Conf:
-    def __init__(self, total_time="120", data_rate="1Gbps", delay="5000ns", tracing=False):
+    def __init__(self, total_time="600", data_rate="1Gbps", delay="5000ns", tracing=False):
         self.total_time = total_time
         self.data_rate = data_rate
         self.delay = delay
@@ -90,7 +90,7 @@ def run_configuration(experiment, rate_multiplier, ratio_ab, heartbeat_rate, a_n
     dir_prefix = 'ab_exp'
     nodes = ['main'] + a_nodes_names
     conf_string = '%d_%s_%s_%s_%s_%s' % (experiment, rate_multiplier, ratio_ab, heartbeat_rate, a_node_numbers, optimizer)
-    
+
     ## Make the directory to save the current logs
     ## TODO: Also add a timestamp?
     dir_name = dir_prefix + conf_string
@@ -132,7 +132,7 @@ def run_debs_configuration(rate_multiplier, num_houses, optimizer, run_ns3=False
     dir_prefix = 'debs_house_query1'
     nodes = ['main'] + house_nodes_names
     conf_string = '%s_%s_%s' % (rate_multiplier, num_houses, optimizer)
-    
+
     ## Make the directory to save the current logs
     ## TODO: Also add a timestamp?
     dir_name = dir_prefix + '_' + conf_string
@@ -185,7 +185,7 @@ def run_outlier_detection_configuration(rate_multiplier, num_houses, optimizer,
     dir_prefix = 'outlier_detection'
     nodes = ['main'] + house_nodes_names
     conf_string = '%s_%s_%s_%s' % (rate_multiplier, num_houses, optimizer, run_ns3)
-    
+
     ## Make the directory to save the current logs
     ## TODO: Also add a timestamp?
     dir_name = dir_prefix + '_' + conf_string
@@ -219,11 +219,6 @@ def run_configurations(experiment, rate_multipliers, ratios_ab, heartbeat_rates,
             for heartbeat_rate in heartbeat_rates:
                 for a_node in a_nodes_numbers:
                     for optimizer in optimizers:
-                        # Heuristic to approximate the simulation time
-                        total_time = 3.0 + 1000.0 / rate_m + a_node / 3.0
-                        # Add 15% slack time and convert to int
-                        total_time = int(round(1.15 * total_time))
-                        ns3_conf.total_time = str(total_time)
                         run_configuration(experiment, rate_m, ratio_ab, heartbeat_rate, a_node, optimizer, run_ns3, ns3_conf)
 
 
@@ -258,7 +253,7 @@ optimizers = ["optimizer_greedy"]
 ## An issue is that producers take up scheduling time, and so for 5 nodes, we need
 ## 5 "threads" for 'a' producers + 1 for b producer
 ## 5 "threads" for 'a' mailboxes + 1 for b mailbox
-## 5 "threads" for 'a' nodes + 1 for b node  
+## 5 "threads" for 'a' nodes + 1 for b node
 
 ## Experiment 2
 ## ===============
@@ -288,7 +283,7 @@ optimizers = ["optimizer_greedy"]
 
 ## Claim showcased by the experiments:
 ## A claim that we can make for the first two experiments is that the system scales well
-## both when increasing the rate, as well as when increasing the 
+## both when increasing the rate, as well as when increasing the
 
 ## Experiment 3
 ## ============
@@ -362,4 +357,4 @@ optimizers = ["optimizer_greedy"]
 
 # run_outlier_detection_configurations(rate_multipliers, num_streams, optimizers, run_ns3=True, ns3_conf=NS3Conf(total_time="7500"))
 
-run_outlier_detection_configurations(rate_multipliers, num_streams, optimizers, run_ns3=False)
+# run_outlier_detection_configurations(rate_multipliers, num_streams, optimizers, run_ns3=False)
