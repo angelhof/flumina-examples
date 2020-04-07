@@ -23,10 +23,10 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.triggers.CountTrigger;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.util.Collector;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ValueBarrierExperimentTest {
 
-    private static final Logger LOG = LogManager.getLogger();
+    private static final Logger LOG = LoggerFactory.getLogger(ValueBarrierExperimentTest.class);
 
     @ClassRule
     public static MiniClusterWithClientResource flinkCluster =
@@ -126,7 +126,7 @@ public class ValueBarrierExperimentTest {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.setParallelism(valueNodes + 1);
 
-        long startTime = System.nanoTime() + 10_000_000;
+        long startTime = System.nanoTime() + 500_000_000;
         DataStream<ValueOrHeartbeat> valueStream =
                 env.addSource(new ValueSource(totalValues, valueRate, startTime)).setParallelism(valueNodes);
         DataStream<BarrierOrHeartbeat> barrierStream =

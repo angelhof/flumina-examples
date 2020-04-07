@@ -1,8 +1,7 @@
 package edu.upenn.flumina;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -10,7 +9,7 @@ import java.util.concurrent.locks.LockSupport;
 
 public class SleepExperiment {
 
-    private static final Logger LOG = LogManager.getLogger();
+    private static final Logger LOG = LoggerFactory.getLogger(SleepExperiment.class);
 
     private static double getAvg(long[] samples) {
         return Arrays.stream(samples).average().getAsDouble();
@@ -35,7 +34,7 @@ public class SleepExperiment {
             Thread.sleep(minMillisPause);
             samples[i] = System.nanoTime() - start;
         }
-        LOG.printf(Level.INFO, "Thread.sleep(long): avg = %.0f ns", getAvg(samples));
+        LOG.info(String.format("Thread.sleep(long): avg = %.0f ns", getAvg(samples)));
 
         // Measure Thread.sleep(long, int)
         for (int i = 0; i < samples.length; i++) {
@@ -43,7 +42,7 @@ public class SleepExperiment {
             Thread.sleep(millisPart, nanosPart);
             samples[i] = System.nanoTime() - start;
         }
-        LOG.printf(Level.INFO, "Thread.sleep(long, int): avg = %.0f ns", getAvg(samples));
+        LOG.info(String.format("Thread.sleep(long, int): avg = %.0f ns", getAvg(samples)));
 
         // Measure LockSupport.parkNanos(long)
         for (int i = 0; i < samples.length; i++) {
@@ -51,6 +50,6 @@ public class SleepExperiment {
             LockSupport.parkNanos(pauseInNanos);
             samples[i] = System.nanoTime() - start;
         }
-        LOG.printf(Level.INFO, "Thread.sleep(long): avg = %.0f ns", getAvg(samples));
+        LOG.info(String.format("Thread.sleep(long): avg = %.0f ns", getAvg(samples)));
     }
 }
