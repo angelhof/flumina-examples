@@ -1,3 +1,9 @@
+# REPOSITORY DEPRECATED
+# This repository contained the examples for Flumina and its use is discontinued as of December 2021.
+# The latest version of Flumina, including the latest examples, can be found at the main repository, [`flumina`](https://github.com/angelhof/flumina).
+
+----
+
 ## Flumina Examples
 
 This repository contains example applications for [Flumina](https://github.com/angelhof/flumina).
